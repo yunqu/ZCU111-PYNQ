@@ -4,7 +4,9 @@
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
-#include "xrfdc_clk.h"
+#include "xrfdc_lmk04298.h"
+#include "xrfdc_lmk04832.h"
+#include "xrfdc_lmx2594.h"
 
 int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
     unsigned int LMK04208_CKin[1][26];
