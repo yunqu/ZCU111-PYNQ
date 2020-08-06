@@ -15,7 +15,8 @@ import os
 
 _ffi = cffi.FFI()
 _ffi.cdef("int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]);"
-          "int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]);")
+          "int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]);"
+          "int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]);")
 
 _lib = _ffi.dlopen(os.path.join(os.path.dirname(__file__), 'libxrfclk.so'))
 
@@ -39,6 +40,13 @@ def _write_lmk04208_regs(reg_vals):
     """
     _safe_wrapper("writeLmk04208Regs", _iic_channel, reg_vals)
 
+def _write_Lmk04832Regs_regs(reg_vals):
+    """Write values to the LMK04208 registers.
+    This is an internal function --- here be dragons.
+
+    reg_vals: list of 26 32bit register values
+    """
+    _safe_wrapper("writeLmk04832Regs", _iic_channel, reg_vals)
 
 def _write_lmx2594_regs(reg_vals):
     """Write values to the LMX2594 registers.
@@ -65,7 +73,7 @@ def set_all_ref_clks(freq):
                            "Please see available options in "
                            "getFreqList()")
     else:
-        _safe_wrapper("writeLmk04208Regs", _iic_channel, _lmk04208Config[122.88])
+        _safe_wrapper("writeLmk04832Regs", _iic_channel, _lmk04832Config[122.88])
         _safe_wrapper("writeLmx2594Regs", _iic_channel, _lmx2594Config[freq])
 
 
@@ -141,25 +149,18 @@ _lmx2594Config = {
 }
 
 _lmk04208Config = {
-#     122.88: [
-#         0x000090, 0x000010, 0x000200, 0x000306, 0x0004D1, 0x000563, 0x000650, 0x000C51,
-#         0x000D04, 0x010090, 0x01010A, 0x010201, 0x010340, 0x010410, 0x010512, 0x010601,
-#         0x010750, 0x010890, 0x01090A, 0x010A01, 0x010B40, 0x010C10, 0x010D12, 0x010E01,
-#         0x010F05, 0x011008, 0x01110A, 0x011280, 0x011350, 0x011410, 0x011512, 0x011601,
-#         0x011700, 0x011819, 0x01190A, 0x011A80, 0x011B50, 0x011C10, 0x011D12, 0x011E01,
-#         0x011F33, 0x012019, 0x01210A, 0x012200, 0x012340, 0x012410, 0x012512, 0x012601,
-#         0x012705, 0x012819, 0x01290A, 0x012A00, 0x012B40, 0x012C10, 0x012D12, 0x012E01, 
-#         0x012F55, 0x013002, 0x01310A, 0x013280, 0x013350, 0x013410, 0x013512, 0x013601,
-#         0x013700, 0x013825, 0x013900, 0x013A0C, 0x013B00, 0x013C00, 0x013D08, 0x013E03,
-#         0x013F00, 0x01400F, 0x014100, 0x014200, 0x014311, 0x014400, 0x014500, 0x014618,
-#         0x01470A, 0x014802, 0x014942, 0x014A03, 0x014B06, 0x014C00, 0x014D00, 0x014EC0,
-#         0x014F7F, 0x015001, 0x015102, 0x015200, 0x015300, 0x015478, 0x015500, 0x015678,
-#         0x015700, 0x015896, 0x015904, 0x015AB0, 0x015BD4, 0x015C20, 0x015D00, 0x015E1E,
-#         0x015F0B, 0x016000, 0x016102, 0x01624C, 0x016300, 0x016400, 0x016519, 0x016958,
-#         0x016A20, 0x016B00, 0x016C00, 0x016D00, 0x016E13, 0x017310, 0x017700, 0x018200,
-#         0x018300, 0x016600, 0x016700, 0x016819, 0x055500
-#     ]
-          
+    122.88: [
+        0x00160040, 0x00143200, 0x00143201, 0x00140322,
+        0xC0140023, 0x40140024, 0x80141E05, 0x01100006,
+        0x01100007, 0x06010008, 0x55555549, 0x9102410A,
+        0x0401100B, 0x1B0C006C, 0x2302886D, 0x0200000E,
+        0x8000800F, 0xC1550410, 0x00000058, 0x02C9C419,
+        0x8FA8001A, 0x10001E1B, 0x0021201C, 0x0180033D,
+        0x0200033E, 0x003F001F
+    ]
+}
+
+_lmk04832Config = {         
     122.88: [
           0x000090, 0x000010, 0x000200, 0x000306, 0x0004D1, 0x000563, 0x000650, 0x000C51,
           0x000D04, 0x010090, 0x01010A, 0x010201, 0x010340, 0x010410, 0x010512, 0x010604,
@@ -177,6 +178,5 @@ _lmk04208Config = {
           0x015F0B, 0x016000, 0x016102, 0x01624C, 0x016300, 0x016400, 0x016519, 0x016958,
           0x016A20, 0x016B00, 0x016C00, 0x016D00, 0x016E13, 0x017310, 0x017700, 0x018200,
           0x018300, 0x016600, 0x016700, 0x016819, 0x055500
-
     ]
 }
