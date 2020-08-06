@@ -90,7 +90,7 @@ XIicPs Iic; /* Instance of the IIC Device */
 #endif /* __BAREMETAL__ */
 
 
-#ifdef BOARD_XUPRFSOC
+#ifdef BOARD_ZCU111
 
 #define FUNCTION_ID 	0xd
 #define I2C_SPI_ADDR 	0x2F

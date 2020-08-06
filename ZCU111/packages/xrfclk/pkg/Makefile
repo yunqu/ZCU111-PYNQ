@@ -3,7 +3,7 @@ LIB_NAME := libxrfclk.so
 PKG_DIR := xrfclk
 
 all:
-	gcc -o $(LIB_NAME) -shared -fPIC -Isrc $(LOCAL_SRC) -DXPS_BOARD_ZCU111 -ggdb
+	gcc -o $(LIB_NAME) -shared -fPIC -Isrc $(LOCAL_SRC) -DXUP_RFSOC -ggdb
 
 install:
 	cp $(LIB_NAME) $(PKG_DIR)/
