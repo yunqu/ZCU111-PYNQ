@@ -1,6 +1,6 @@
 /******************************************************************************
 *
-* Copyright (C) 2018 Xilinx, Inc.  All rights reserved.
+* Copyright (C) 2020 Xilinx, Inc.  All rights reserved.
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy
 * of this software and associated documentation files (the "Software"), to deal
@@ -28,10 +28,10 @@
 /****************************************************************************/
 /**
 *
-* @file xrfdc_clk.c
+* @file xrfdc_lmx2594.c
 *
-* This file contains a programming example for using the lmx2594 and lmk04028
-* clock generator.
+* This file contains a programming example for using the lmx2594 clock 
+* generator.
 * This example configures the lmx2594  to 20 frequencies. If 0 is passed
 * then the chip is powered down.
 * For zcu111 board users are expected to define XPS_BOARD_ZCU111 macro
@@ -47,13 +47,14 @@
 * 1.0   sd     04/11/18 First release
 * 4.0   sd     05/22/18 Updated lmx configuration
 * 5.0   sd     09/05/18 Updated lmx reset sequence
+* 6.0 	ldm	   08/06/20 Seperated clocking chips into different files
 *
 * </pre>
 *
 *****************************************************************************/
 
 /***************************** Include Files ********************************/
-#ifdef XPS_BOARD_ZCU111
+#if defined(BOARD_ZCU111) || defined(BOARD_XUPRFSOC)
 
 #ifndef __BAREMETAL__
 #include <string.h>
@@ -86,12 +87,29 @@
 #include <string.h>
 XIicPs Iic; /* Instance of the IIC Device */
 
-#endif
-#include "xrfdc_clk.h"
+#endif /* XPS_BOARD_ZCU111 || BOARD_XUPRFSOC */
 
-#define LMK04208_count 26
-#define LMK04832_count 125
+
+#ifdef BOARD_XUPRFSOC
+
+#define FUNCTION_ID 	0xd
+#define I2C_SPI_ADDR 	0x2F
+#define I2C_MUX_ADDR	0x74
+
+#endif
+
+
+#ifdef BOARD_XUPRFSOC
+
+#define FUNCTION_ID 	0x3
+#define I2C_SPI_ADDR 	0x2A
+#define I2C_MUX_ADDR	0x71
+
+#endif
+#include "xrfdc_lmx2594.h"
+
 #define LMX2594_A_count 113
+
 typedef struct {
 	int XFrequency;
 	unsigned int LMX2594_A[LMX2594_A_count];
@@ -508,7 +526,6 @@ void Lmx2594Updatei2c(int XIicDevFile,unsigned int  r[LMX2594_A_count])
 	int Index=0;
 	int val;
 	unsigned char tx_array[3];
-	int function_id = 3;
 /*
  * 1. Apply power to device.
  * 2. Program RESET = 1 to reset registers.
@@ -521,20 +538,20 @@ void Lmx2594Updatei2c(int XIicDevFile,unsigned int  r[LMX2594_A_count])
 	tx_array[1] = 0;
 	tx_array[0] = 0;
 	val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
-	IicWriteData(XIicDevFile, function_id, 3, tx_array);
+	IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
 	usleep(100000);
 	tx_array[2] = 0;
 	tx_array[1] = 0;
 	tx_array[0] = 0;
 	val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
-	IicWriteData(XIicDevFile, function_id, 3, tx_array);
+	IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
 	usleep(100000);
 	for (Index = 0; Index < LMX2594_A_count; Index++) {
 		tx_array[2] = (unsigned char) (r[Index]) & (0xFF);
 		tx_array[1] = (unsigned char) (r[Index] >> 8) & (0xFF);
 		tx_array[0] = (unsigned char) (r[Index] >> 16) & (0xFF);
 		val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
-		IicWriteData(XIicDevFile, function_id, 3, tx_array);
+		IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
 		usleep(100000);
 	}
 	/* FCAL_EN = 1 */
@@ -543,20 +560,19 @@ void Lmx2594Updatei2c(int XIicDevFile,unsigned int  r[LMX2594_A_count])
 	tx_array[0] = (unsigned char) (r[112] >> 16) & (0xFF);
 	val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
 	printf("LMX configured \n");
-	IicWriteData(XIicDevFile, function_id, 3, tx_array);
+	IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
 }
 static int Lmx2594UpdateFreq(int XIicDevFile,int  XFrequency)
 {
 	int XFreqIndex=0;
 	unsigned char tx_array[3];
 	int freq_index=0;
-	int function_id=3;
 	if (XFrequency == 0) {
 		tx_array[2] = 0x3;
 		tx_array[1] = 0;
 		tx_array[0] = 0;
 
-		IicWriteData(XIicDevFile, function_id, 3, tx_array);
+		IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
 		return 0;
 	}
 	for(XFreqIndex=0 ; XFreqIndex<20; XFreqIndex++) {
@@ -569,284 +585,6 @@ static int Lmx2594UpdateFreq(int XIicDevFile,int  XFrequency)
 	printf("configuring default Frequency\n");
 	Lmx2594Updatei2c( XIicDevFile, ClockingLmx[0].LMX2594_A);
 	return 0;
-}
-static int Lmk04208UpdateFreq(int XIicDevFile, unsigned int LMK04208_CKin[1][26] )
-{
-	int Index;
-	unsigned char tx_array[4];
-	for (Index = 0; Index < LMK04208_count; Index++) {
-		tx_array[3] = (unsigned char) (LMK04208_CKin[0][Index]) & (0xFF);
-		tx_array[2] = (unsigned char) (LMK04208_CKin[0][Index] >> 8) & (0xFF);
-		tx_array[1] = (unsigned char) (LMK04208_CKin[0][Index] >> 16) & (0xFF);
-		tx_array[0] = (unsigned char) (LMK04208_CKin[0][Index] >> 24) & (0xFF);
-		IicWriteData(XIicDevFile, 2, 4, tx_array);
-		usleep(1000);
-	}
-	return 0;
-}
-static int Lmk04832UpdateFreq(int XIicDevFile, unsigned int LMK04832_CKin[1][125] )
-{
-	int Index;
-	int function_id = 8;
-	unsigned char tx_array[3];
-	for (Index = 0; Index < LMK04832_count; Index++) {
-		tx_array[2] = (unsigned char) (LMK04832_CKin[0][Index]) & (0xFF);
-		tx_array[1] = (unsigned char) (LMK04832_CKin[0][Index] >> 8) & (0xFF);
-		tx_array[0] = (unsigned char) (LMK04832_CKin[0][Index] >> 16) & (0xFF);
-		IicWriteData(XIicDevFile, function_id, 3, tx_array);
-		usleep(1000);
-	}
-	return 0;
-}
-
-#endif
-
-/****************************************************************************/
-/**
-*
-* This function is used to configure LMK04208
-*
-* @param	XIicBus is the Controller Id/Bus number.
-*           - For Baremetal it is the I2C controller Id to which LMK04208
-*             deviceis connected.
-*           - For Linux it is the Bus Id to which LMK04208 device is connected.
-* @param	LMK04208_CKin is the configuration array to configure the LMK04208.
-*
-* @return
-*		- None
-*
-* @note   	None
-*
-****************************************************************************/
-void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][26])
-{
-#ifdef __BAREMETAL__
-	XIicPs_Config *Config_iic;
-	int Status;
-	u8 tx_array[10];
-	u8 rx_array[10];
-	u32 ClkRate = 100000;
-	int Index;
-
-	Config_iic = XIicPs_LookupConfig(XIicBus);
-	if (NULL == Config_iic) {
-		return;
-	}
-
-	Status = XIicPs_CfgInitialize(&Iic, Config_iic, Config_iic->BaseAddress);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	Status = XIicPs_SetSClk(&Iic, ClkRate);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * 0x02-enable Super clock module 0x20- analog I2C power module slaves
-	 */
-	tx_array[0] = 0x20;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x01, 0x74);
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-	usleep(25000);
-
-	/*
-	 * Receive the Data.
-	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array, 1, 0x74);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * Wait until bus is idle to start another transfer.
-	 */
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-
-
-	/*
-	 * Function Id.
-	 */
-	tx_array[0] = 0xF0;
-	tx_array[1] = 0x02;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, 0x2F);
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-	usleep(25000);
-
-	/*
-	 * Receive the Data.
-	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array,
-			2, 0x2F);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * Wait until bus is idle to start another transfer.
-	 */
-	while (XIicPs_BusIsBusy(&Iic));
-
-
-	for (Index = 0; Index < LMK04208_count; Index++) {
-		tx_array[0] = 0x02;
-		tx_array[4] = (u8) (LMK04208_CKin[0][Index]) & (0xFF);
-		tx_array[3] = (u8) (LMK04208_CKin[0][Index] >> 8) & (0xFF);
-		tx_array[2] = (u8) (LMK04208_CKin[0][Index] >> 16) & (0xFF);
-		tx_array[1] = (u8) (LMK04208_CKin[0][Index] >> 24) & (0xFF);
-		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x05, 0x2F);
-		usleep(25000);
-		while (XIicPs_BusIsBusy(&Iic))
-			;
-	}
-
-	sleep(2);
-
-	xil_printf("LMK04208 configuration write done\r\n");
-
-#else
-	int XIicDevFile;
-	char XIicDevFilename[20];
-
-	sprintf(XIicDevFilename, "/dev/i2c-%d", XIicBus);
-	XIicDevFile = open(XIicDevFilename, O_RDWR);
-
-	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, 0x2f) < 0) {
-		printf("Error: Could not set address \n");
-		return ;
-	}
-
-	Lmk04208UpdateFreq( XIicDevFile, LMK04208_CKin);
-	close(XIicDevFile);
-#endif
-}
-
-/****************************************************************************/
-/**
-*
-* This function is used to configure LMK04832
-*
-* @param	XIicBus is the Controller Id/Bus number.
-*           - For Baremetal it is the I2C controller Id to which LMK04832
-*             deviceis connected.
-*           - For Linux it is the Bus Id to which LMK04832 device is connected.
-* @param	LMK04208_CKin is the configuration array to configure the LMK04832.
-*
-* @return
-*		- None
-*
-* @note   	None
-*
-****************************************************************************/
-void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
-{
-#ifdef __BAREMETAL__
-	XIicPs_Config *Config_iic;
-	int Status;
-	u8 tx_array[10];
-	u8 rx_array[10];
-	u32 ClkRate = 100000;
-	int Index;
-
-	Config_iic = XIicPs_LookupConfig(XIicBus);
-	if (NULL == Config_iic) {
-		return;
-	}
-
-	Status = XIicPs_CfgInitialize(&Iic, Config_iic, Config_iic->BaseAddress);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	Status = XIicPs_SetSClk(&Iic, ClkRate);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * 0x02-enable Super clock module 0x20- analog I2C power module slaves
-	 */
-	tx_array[0] = 0x20;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x01, 0x71);
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-	usleep(25000);
-
-	/*
-	 * Receive the Data.
-	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array, 1, 0x71);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * Wait until bus is idle to start another transfer.
-	 */
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-
-
-	/*
-	 * Function Id.
-	 */
-	tx_array[0] = 0xF0;
-	tx_array[1] = 0x08;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, 0x2A);
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-	usleep(25000);
-
-	/*
-	 * Receive the Data.
-	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array,
-			2, 0x2A);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * Wait until bus is idle to start another transfer.
-	 */
-	while (XIicPs_BusIsBusy(&Iic));
-
-
-	for (Index = 0; Index < LMK04832_count; Index++) {
-		tx_array[0] = 0x02;
-		tx_array[4] = (u8) (LMK04832_CKin[0][Index]) & (0xFF);
-		tx_array[3] = (u8) (LMK04832_CKin[0][Index] >> 8) & (0xFF);
-		tx_array[2] = (u8) (LMK04832_CKin[0][Index] >> 16) & (0xFF);
-		tx_array[1] = (u8) (LMK04832_CKin[0][Index] >> 24) & (0xFF);
-		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x05, 0x2A);
-		usleep(25000);
-		while (XIicPs_BusIsBusy(&Iic))
-			;
-	}
-
-	sleep(2);
-
-	xil_printf("LMK04832 configuration write done\r\n");
-
-#else
-	int XIicDevFile;
-	char XIicDevFilename[20];
-
-	sprintf(XIicDevFilename, "/dev/i2c-%d", XIicBus);
-	XIicDevFile = open(XIicDevFilename, O_RDWR);
-
-	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, 0x2a) < 0) {
-		printf("Error: Could not set address \n");
-		return ;
-	}
-
-	Lmk04832UpdateFreq( XIicDevFile, LMK04832_CKin);
-	close(XIicDevFile);
-#endif
 }
 
 /****************************************************************************/
@@ -904,7 +642,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	 * 0x02-enable Super clock module 0x20- analog I2C power module slaves
 	 */
 	tx_array[0] = 0x20;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x01, 0x71);
+	XIicPs_MasterSendPolled(&Iic, tx_array, 0x01, I2C_MUX_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;
 	usleep(25000);
@@ -912,7 +650,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	/*
 	 * Receive the Data.
 	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array, 1, 0x71);
+	Status = XIicPs_MasterRecvPolled(&Iic, rx_array, 1, I2C_MUX_ADDR);
 	if (Status != XST_SUCCESS) {
 		return;
 	}
@@ -927,8 +665,8 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	 * Function Id.
 	 */
 	tx_array[0] = 0xF0;
-	tx_array[1] = 0x03;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, 0x2A);
+	tx_array[1] = FUNCTION_ID;
+	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;
 	usleep(25000);
@@ -937,7 +675,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	 * Receive the Data.
 	 */
 	Status = XIicPs_MasterRecvPolled(&Iic, rx_array,
-			2, 0x2A);
+			2, I2C_SPI_ADDR);
 	if (Status != XST_SUCCESS) {
 		return;
 	}
@@ -951,7 +689,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3]=(u8) (0x00);
 	tx_array[2]=(u8) (0x00);
 	tx_array[1]=(u8) (0x20);
-	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic));
 
 	sleep(2);
@@ -960,7 +698,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3]=(u8) (0x00);
 	tx_array[2]=(u8) (0x00);
 	tx_array[1]=(u8) (0x00);
-	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic));
 
 	sleep(2);
@@ -969,7 +707,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 		tx_array[3] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index]) & (0xFF);
 		tx_array[2] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index] >> 8) & (0xFF);
 		tx_array[1] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index] >> 16) & (0xFF);
-		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 		while (XIicPs_BusIsBusy(&Iic))
 			;
 		usleep(25000);
@@ -980,7 +718,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3] = (u8) (ClockingLmx[freq_index].LMX2594_A[112]) & (0xFF);
 	tx_array[2] = (u8) (ClockingLmx[freq_index].LMX2594_A[112] >> 8) & (0xFF);
 	tx_array[1] = (u8) (ClockingLmx[freq_index].LMX2594_A[112] >> 16) & (0xFF);
-	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;
 	usleep(25000);
@@ -989,7 +727,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3]=(u8) (0x00);
 	tx_array[2]=(u8) (0x00);
 	tx_array[1]=(u8) (0x02);
-	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic));
 
 	sleep(2);
@@ -997,7 +735,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3]=(u8) (0x00);
 	tx_array[2]=(u8) (0x00);
 	tx_array[1]=(u8) (0x00);
-	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic,tx_array,0x04,I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic));
 
 	sleep(2);
@@ -1006,7 +744,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 		tx_array[3] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index]) & (0xFF);
 		tx_array[2] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index] >> 8) & (0xFF);
 		tx_array[1] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index] >> 16) & (0xFF);
-		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 		while (XIicPs_BusIsBusy(&Iic))
 			;
 		usleep(25000);
@@ -1017,7 +755,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3] = (u8) (ClockingLmx[freq_index].LMX2594_A[112]) & (0xFF);
 	tx_array[2] = (u8) (ClockingLmx[freq_index].LMX2594_A[112] >> 8) & (0xFF);
 	tx_array[1] = (u8) (ClockingLmx[freq_index].LMX2594_A[112] >> 16) & (0xFF);
-	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;
 	usleep(25000);
@@ -1026,7 +764,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3]=(u8) (0x00);
 	tx_array[2]=(u8) (0x00);
 	tx_array[1]=(u8) (0x02);
-	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic));
 	sleep(2);
 
@@ -1034,7 +772,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3]=(u8) (0x00);
 	tx_array[2]=(u8) (0x00);
 	tx_array[1]=(u8) (0x00);
-	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic));
 	sleep(2);
 
@@ -1043,7 +781,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 		tx_array[3] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index]) & (0xFF);
 		tx_array[2] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index]>> 8) & (0xFF);
 		tx_array[1] = (u8) (ClockingLmx[freq_index].LMX2594_A[Index]>> 16) & (0xFF);
-		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 		while (XIicPs_BusIsBusy(&Iic))
 			;
 		usleep(25000);
@@ -1053,7 +791,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	tx_array[3] = (u8) (ClockingLmx[freq_index].LMX2594_A[112]) & (0xFF);
 	tx_array[2] = (u8) (ClockingLmx[freq_index].LMX2594_A[112] >> 8) & (0xFF);
 	tx_array[1] = (u8) (ClockingLmx[freq_index].LMX2594_A[112] >> 16) & (0xFF);
-	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, 0x2A);
+	Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x04, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;
 	usleep(25000);
@@ -1066,7 +804,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	sprintf(XIicDevFilename, "/dev/i2c-%d", XIicBus);
 	XIicDevFile = open(XIicDevFilename, O_RDWR);
 
-	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, 0x2a) < 0) {
+	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, I2C_SPI_ADDR) < 0) {
 		printf("Error: Could not set address \n");
 		return ;
 	}
@@ -1075,3 +813,41 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 #endif
 }
 #endif /* #ifdef XPS_BOARD_ZCU111*/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

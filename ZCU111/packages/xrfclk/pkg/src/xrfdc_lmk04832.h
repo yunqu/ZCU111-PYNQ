@@ -27,12 +27,9 @@
  * ******************************************************************************/
 #ifndef RFDC_CLK_H_
 #define RFDC_CLK_H_
-#ifdef XPS_BOARD_ZCU111
+#ifdef BOARD_XUPRFSOC
 
-void LMX2594ClockConfig(int XIicBus, int XFrequency);
-void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][26]);
 void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125]);
-void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
 
-#endif /* XPS_BOARD_ZCU111 */
+#endif /* BOARD_XUPRFSOC */
 #endif /* RFDC_CLK_H_ */
