@@ -32,5 +32,5 @@
 void LMX2594ClockConfig(int XIicBus, int XFrequency);
 void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
 
-#endif /* XPS_BOARD_ZCU111 || BOARD_XUPRFSOC */
+#endif /* BOARD_ZCU111 || BOARD_XUPRFSOC */
 #endif /* RFDC_CLK_H_ */
