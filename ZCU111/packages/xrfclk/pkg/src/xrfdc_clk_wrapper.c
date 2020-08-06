@@ -16,6 +16,17 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
      // Need to patch xrfdc_clk.c file to return status.
      return 0;
  }
+ 
+ int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]) {
+    unsigned int LMK04832_CKin[1][125];
+    for(int i=0;i<125;i++)
+	    LMK04832_CKin[0][i] = RegVals[i];
+    LMK04832ClockConfig(IicNum, LMK04832_CKin);
+
+     // We really should be returning exit status here!
+     // Need to patch xrfdc_clk.c file to return status.
+     return 0;
+ }
 
 int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     int XIicDevFile;
@@ -24,7 +35,7 @@ int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     sprintf(XIicDevFilename, "/dev/i2c-%d", IicNum);
     XIicDevFile = open(XIicDevFilename, O_RDWR);
 
-    if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, 0x2f) < 0) {
+    if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, 0x2a) < 0) {
       printf("Error: Could not set address \n");
       return 1;
     }
