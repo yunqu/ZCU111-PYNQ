@@ -87,7 +87,7 @@
 #include <string.h>
 XIicPs Iic; /* Instance of the IIC Device */
 
-#endif /* XPS_BOARD_ZCU111 || BOARD_XUPRFSOC */
+#endif /* __BAREMETAL__ */
 
 
 #ifdef BOARD_XUPRFSOC
@@ -586,6 +586,7 @@ static int Lmx2594UpdateFreq(int XIicDevFile,int  XFrequency)
 	Lmx2594Updatei2c( XIicDevFile, ClockingLmx[0].LMX2594_A);
 	return 0;
 }
+#endif
 
 /****************************************************************************/
 /**
@@ -812,7 +813,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	Lmx2594UpdateFreq(XIicDevFile, XFrequency);
 #endif
 }
-#endif /* #ifdef XPS_BOARD_ZCU111*/
+#endif /* XPS_BOARD_ZCU111 || BOARD_XUPRFSOC */
 
 
 

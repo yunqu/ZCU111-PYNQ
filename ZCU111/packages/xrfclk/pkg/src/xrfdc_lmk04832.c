@@ -256,3 +256,4 @@ void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 	close(XIicDevFile);
 #endif
 }
+#endif /* #ifdef BOARD_XUPRFSOC */

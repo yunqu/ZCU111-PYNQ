@@ -89,6 +89,7 @@
 XIicPs Iic; /* Instance of the IIC Device */
 
 #endif
+
 #include "xrfdc_lmk04208.h"
 
 #define LMK04208_count 26
@@ -255,7 +256,7 @@ void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][125])
 	close(XIicDevFile);
 #endif
 }
-
+#endif /* #ifdef BOARD_ZCU111 */
 
 
 

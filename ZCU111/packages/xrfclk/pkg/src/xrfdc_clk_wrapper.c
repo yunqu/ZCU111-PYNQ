@@ -4,7 +4,7 @@
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
-#include "xrfdc_lmk04298.h"
+#include "xrfdc_lmk04208.h"
 #include "xrfdc_lmk04832.h"
 #include "xrfdc_lmx2594.h"
 
