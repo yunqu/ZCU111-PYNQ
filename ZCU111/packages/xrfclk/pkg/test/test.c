@@ -47,8 +47,8 @@ int main()
 {
 	int XIicBus = 8;
 	unsigned int LMK04832_CKin[1][125];
-    for(int i=0;i<125;i++)
-	    LMK04832_CKin[0][i] = i;
-    LMK04832ClockConfig(XIicBus, LMK04832_CKin);
+	for(int i=0;i<125;i++)
+		LMK04832_CKin[0][i] = i;
+	LMK04832ClockConfig(XIicBus, LMK04832_CKin);
 	LMK04832DebugConfig(XIicBus, LMK04832_CKin);
 }
