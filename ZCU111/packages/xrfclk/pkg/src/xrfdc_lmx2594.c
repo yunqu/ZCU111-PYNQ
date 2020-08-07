@@ -54,8 +54,6 @@
 *****************************************************************************/
 
 /***************************** Include Files ********************************/
-#if defined(BOARD_ZCU111) || defined(BOARD_XUPRFSOC)
-
 #ifndef __BAREMETAL__
 #include <string.h>
 #include <stdio.h>
@@ -88,25 +86,7 @@
 XIicPs Iic; /* Instance of the IIC Device */
 
 #endif /* __BAREMETAL__ */
-
-
-#ifdef BOARD_ZCU111
-
-#define FUNCTION_ID 	0xd
-#define I2C_SPI_ADDR 	0x2F
-#define I2C_MUX_ADDR	0x74
-
-#endif
-
-
-#ifdef BOARD_XUPRFSOC
-
-#define FUNCTION_ID 	0x3
-#define I2C_SPI_ADDR 	0x2A
-#define I2C_MUX_ADDR	0x71
-
-#endif
-#include "xrfdc_lmx2594.h"
+#include "xrfdc_clk.h"
 
 #define LMX2594_A_count 113
 

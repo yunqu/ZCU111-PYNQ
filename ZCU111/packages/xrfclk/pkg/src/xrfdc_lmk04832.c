@@ -52,8 +52,6 @@
 *****************************************************************************/
 
 /***************************** Include Files ********************************/
-#ifdef BOARD_XUPRFSOC
-
 #ifndef __BAREMETAL__
 #include <string.h>
 #include <stdio.h>
@@ -73,9 +71,6 @@
 #define XIIC_BLOCK_MAX	16	/* Max data length */
 #define I2C_SMBUS_WRITE	0
 #define I2C_SMBUS_I2C_BLOCK  6
-#define FUNCTION_ID 	0x08
-#define I2C_SPI_ADDR 	0x2A
-#define I2C_MUX_ADDR	0x71
 
 #else
 #include "xparameters.h"
@@ -89,7 +84,7 @@
 XIicPs Iic; /* Instance of the IIC Device */
 
 #endif
-#include "xrfdc_lmk04832.h"
+#include "xrfdc_clk.h"
 
 #define LMK04832_count 125
 
@@ -256,4 +251,3 @@ void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 	close(XIicDevFile);
 #endif
 }
-#endif /* #ifdef BOARD_XUPRFSOC */

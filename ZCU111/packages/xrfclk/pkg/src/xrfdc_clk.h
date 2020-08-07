@@ -27,10 +27,28 @@
  * ******************************************************************************/
 #ifndef RFDC_CLK_H_
 #define RFDC_CLK_H_
-#if defined(BOARD_ZCU111) || defined(BOARD_XUPRFSOC)
+#ifdef BOARD_XUPRFSOC
 
 void LMX2594ClockConfig(int XIicBus, int XFrequency);
 void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
+void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125]);
 
-#endif /* BOARD_ZCU111 || BOARD_XUPRFSOC */
+#define FUNCTION_ID 	0x3
+#define I2C_SPI_ADDR 	0x2A
+#define I2C_MUX_ADDR	0x71
+
+#endif /* BOARD_XUPRFSOC */
+
+
+#ifdef BOARD_ZCU111
+
+void LMX2594ClockConfig(int XIicBus, int XFrequency);
+void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
+void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][26]);
+
+#define FUNCTION_ID 	0xd
+#define I2C_SPI_ADDR 	0x2F
+#define I2C_MUX_ADDR	0x74
+
+#endif /* BOARD_ZCU111 */
 #endif /* RFDC_CLK_H_ */

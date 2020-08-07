@@ -52,8 +52,6 @@
 *****************************************************************************/
 
 /***************************** Include Files ********************************/
-#ifdef BOARD_ZCU111
-
 #ifndef __BAREMETAL__
 #include <string.h>
 #include <stdio.h>
@@ -73,9 +71,6 @@
 #define XIIC_BLOCK_MAX	16	/* Max data length */
 #define I2C_SMBUS_WRITE	0
 #define I2C_SMBUS_I2C_BLOCK  6
-#define FUNCTION_ID 	0x02
-#define I2C_SPI_ADDR 	0x2F
-#define I2C_MUX_ADDR	0x74
 
 #else
 #include "xparameters.h"
@@ -89,8 +84,7 @@
 XIicPs Iic; /* Instance of the IIC Device */
 
 #endif
-
-#include "xrfdc_lmk04208.h"
+#include "xrfdc_clk.h"
 
 #define LMK04208_count 26
 
@@ -256,7 +250,7 @@ void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][125])
 	close(XIicDevFile);
 #endif
 }
-#endif /* #ifdef BOARD_ZCU111 */
+
 
 
 

@@ -4,10 +4,9 @@
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
 #include <sys/ioctl.h>
-#include "xrfdc_lmk04208.h"
-#include "xrfdc_lmk04832.h"
-#include "xrfdc_lmx2594.h"
+#include "xrfdc_clk.h"
 
+#ifdef BOARD_ZCU111
 int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
     unsigned int LMK04208_CKin[1][26];
     for(int i=0;i<26;i++)
@@ -18,7 +17,9 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
      // Need to patch xrfdc_clk.c file to return status.
      return 0;
  }
+ #endif /* BOARD_ZCU111 */
  
+ #ifdef BOARD_XUPRFSOC
  int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]) {
     unsigned int LMK04832_CKin[1][125];
     for(int i=0;i<125;i++)
@@ -29,6 +30,7 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
      // Need to patch xrfdc_clk.c file to return status.
      return 0;
  }
+ #endif /* BOARD_XUPRFSOC */
 
 int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     int XIicDevFile;
