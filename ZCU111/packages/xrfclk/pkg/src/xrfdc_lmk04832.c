@@ -70,6 +70,7 @@
 
 #define XIIC_BLOCK_MAX	16	/* Max data length */
 #define I2C_SMBUS_WRITE	0
+#define I2C_SMBUS_READ	1
 #define I2C_SMBUS_I2C_BLOCK  5
 
 #else
@@ -112,7 +113,25 @@ static inline void IicWriteData(int XIicDevFile, unsigned char command,
 	ioctl(XIicDevFile,I2C_SMBUS,&args);
 }
 
-static int Lmk04832UpdateFreq(int XIicDevFile, unsigned int LMK04832_CKin[1][125] )
+static inline void IicReadData(int XIicDevFile, unsigned char command,
+                                                   unsigned char length,
+                                                   unsigned char *values)
+{
+	struct i2c_smbus_ioctl_data args;
+	union i2c_smbus_data data;
+	int Index;
+	data.block[0] = length;
+	args.read_write = I2C_SMBUS_READ;
+	args.command = command;
+	args.size = I2C_SMBUS_I2C_BLOCK;
+	args.data = &data;
+	ioctl(XIicDevFile,I2C_SMBUS,&args);
+	for (Index = 1; Index <= length; Index++)
+		values[Index-1] = data.block[Index];
+}
+
+static int Lmk04832UpdateFreq(int XIicDevFile,
+								unsigned int LMK04832_CKin[1][125] )
 {
 	int Index;
 	unsigned char tx_array[3];
@@ -126,6 +145,20 @@ static int Lmk04832UpdateFreq(int XIicDevFile, unsigned int LMK04832_CKin[1][125
 	return 0;
 }
 
+static int Lmk04832GetFreq(int XIicDevFile, 
+							unsigned int LMK04832_CKin[1][125] )
+{
+	int Index;
+	unsigned char tx_array[3];
+	for (Index = 0; Index < LMK04832_count; Index++) {
+		IicReadData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array);
+		LMK04832_CKin[0][Index] = \
+			(tx_array[0]<<16) | (tx_array[1]<<8) | (tx_array[2]);
+		usleep(5000);
+	}
+	return Index;
+}
+
 #endif
 
 /****************************************************************************/
@@ -135,7 +168,7 @@ static int Lmk04832UpdateFreq(int XIicDevFile, unsigned int LMK04832_CKin[1][125
 *
 * @param	XIicBus is the Controller Id/Bus number.
 *           - For Baremetal it is the I2C controller Id to which LMK04832
-*             deviceis connected.
+*             device is connected.
 *           - For Linux it is the Bus Id to which LMK04832 device is connected.
 * @param	LMK04832_CKin is the configuration array to configure the LMK04832.
 *
@@ -248,6 +281,28 @@ void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 	}
 
 	Lmk04832UpdateFreq( XIicDevFile, LMK04832_CKin);
+	close(XIicDevFile);
+#endif
+}
+
+void LMK04832DebugConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
+{
+#ifndef __BAREMETAL__
+	int XIicDevFile;
+	int Index;
+	char XIicDevFilename[20];
+
+	sprintf(XIicDevFilename, "/dev/i2c-%d", XIicBus);
+	XIicDevFile = open(XIicDevFilename, O_RDWR);
+
+	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, I2C_SPI_ADDR) < 0) {
+		printf("Error: Could not set address \n");
+		return ;
+	}
+
+	Lmk04832GetFreq( XIicDevFile, LMK04832_CKin);
+	for (Index = 0; Index < LMK04832_count; Index++)
+		printf("%x ", LMK04832_CKin[0][Index]);
 	close(XIicDevFile);
 #endif
 }

@@ -32,10 +32,11 @@
 void LMX2594ClockConfig(int XIicBus, int XFrequency);
 void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
 void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125]);
+void LMK04832DebugConfig(int XIicBus, unsigned int LMK04832_CKin[1][125]);
 int SC18IS602ClearInt(int XIicDevFile);
 
 #define LMX_FUNCTION_ID 	0x3
-#define LMK_FUNCTION_ID 	0x1
+#define LMK_FUNCTION_ID 	0x8
 #define I2C_SPI_ADDR 	    0x2A
 #define I2C_MUX_ADDR	    0x71
 

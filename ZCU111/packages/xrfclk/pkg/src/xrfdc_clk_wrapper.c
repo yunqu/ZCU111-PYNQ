@@ -17,10 +17,10 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
      // Need to patch xrfdc_clk.c file to return status.
      return 0;
  }
- #endif /* BOARD_ZCU111 */
+#endif /* BOARD_ZCU111 */
  
- #ifdef BOARD_XUPRFSOC
- int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]) {
+#ifdef BOARD_XUPRFSOC
+int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]) {
     unsigned int LMK04832_CKin[1][125];
     for(int i=0;i<125;i++)
 	    LMK04832_CKin[0][i] = RegVals[i];
@@ -29,8 +29,8 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
      // We really should be returning exit status here!
      // Need to patch xrfdc_clk.c file to return status.
      return 0;
- }
- #endif /* BOARD_XUPRFSOC */
+}
+#endif /* BOARD_XUPRFSOC */
 
 #if defined(BOARD_XUPRFSOC) || defined(BOARD_ZCU111)
 int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
