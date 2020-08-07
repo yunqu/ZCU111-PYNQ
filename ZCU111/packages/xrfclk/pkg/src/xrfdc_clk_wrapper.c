@@ -32,6 +32,7 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
  }
  #endif /* BOARD_XUPRFSOC */
 
+#if defined(BOARD_XUPRFSOC) || defined(BOARD_ZCU111)
 int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     int XIicDevFile;
     char XIicDevFilename[20];
@@ -39,7 +40,7 @@ int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     sprintf(XIicDevFilename, "/dev/i2c-%d", IicNum);
     XIicDevFile = open(XIicDevFilename, O_RDWR);
 
-    if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, 0x2a) < 0) {
+    if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, I2C_SPI_ADDR) < 0) {
       printf("Error: Could not set address \n");
       return 1;
     }
@@ -52,3 +53,4 @@ int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     // Requires patch to xrfdc_clk.c.
     return 0;
 }
+#endif /* BOARD_XUPRFSOC || BOARD_ZCU111 */

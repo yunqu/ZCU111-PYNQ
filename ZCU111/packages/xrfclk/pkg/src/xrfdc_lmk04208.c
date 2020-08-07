@@ -120,7 +120,7 @@ static int Lmk04208UpdateFreq(int XIicDevFile, unsigned int LMK04208_CKin[1][125
 		tx_array[2] = (unsigned char) (LMK04208_CKin[0][Index]) & (0xFF);
 		tx_array[1] = (unsigned char) (LMK04208_CKin[0][Index] >> 8) & (0xFF);
 		tx_array[0] = (unsigned char) (LMK04208_CKin[0][Index] >> 16) & (0xFF);
-		IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
+		IicWriteData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array);
 		usleep(1000);
 	}
 	return 0;
@@ -197,7 +197,7 @@ void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][125])
 	 * Function Id.
 	 */
 	tx_array[0] = 0xF0;
-	tx_array[1] = FUNCTION_ID;
+	tx_array[1] = LMK_FUNCTION_ID;
 	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;

@@ -33,9 +33,10 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency);
 void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
 void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125]);
 
-#define FUNCTION_ID 	0x3
-#define I2C_SPI_ADDR 	0x2A
-#define I2C_MUX_ADDR	0x71
+#define LMX_FUNCTION_ID 	0x3
+#define LMK_FUNCTION_ID 	0x8
+#define I2C_SPI_ADDR 	    0x2A
+#define I2C_MUX_ADDR	    0x71
 
 #endif /* BOARD_XUPRFSOC */
 
@@ -46,9 +47,10 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency);
 void Lmx2594Updatei2c(int XIicDevFile, unsigned int r[113]);
 void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][26]);
 
-#define FUNCTION_ID 	0xd
-#define I2C_SPI_ADDR 	0x2F
-#define I2C_MUX_ADDR	0x74
+#define LMX_FUNCTION_ID 	0xd
+#define LMK_FUNCTION_ID 	0x2
+#define I2C_SPI_ADDR 	    0x2F
+#define I2C_MUX_ADDR	    0x74
 
 #endif /* BOARD_ZCU111 */
 #endif /* RFDC_CLK_H_ */

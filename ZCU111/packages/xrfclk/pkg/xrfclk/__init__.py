@@ -27,11 +27,10 @@ if board=="ZCU111":
     _iic_channel = 12
 elif board=="XUPRFSOC":
     _iic_channel = 8
-else
+else:
     raise ValueError("Board {} is not supported.".format(board))
-   
 
-
+    
 def _safe_wrapper(name, *args, **kwargs):
     """Wrapper function for FFI function calls a la xrfdc.py
     """
@@ -81,8 +80,6 @@ def set_all_ref_clks(freq):
         raise RuntimeError(f"Frequency of {freq} MHz is not an option. "
                            "Please see available options in "
                            "getFreqList()")
-                           
-    
     else:
         if board=="ZCU111":
             _safe_wrapper("writeLmk04208Regs", _iic_channel, _lmk04208Config[122.88])

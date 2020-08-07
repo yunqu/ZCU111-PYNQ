@@ -483,7 +483,6 @@ XClockingLmx ClockingLmx[27] = {
 };
 
 #ifndef __BAREMETAL__
-
 static inline void IicWriteData(int XIicDevFile, unsigned char command,
                                                    unsigned char length,
                                                    const unsigned char *values)
@@ -518,20 +517,20 @@ void Lmx2594Updatei2c(int XIicDevFile,unsigned int  r[LMX2594_A_count])
 	tx_array[1] = 0;
 	tx_array[0] = 0;
 	val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
-	IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
+	IicWriteData(XIicDevFile, LMX_FUNCTION_ID, 3, tx_array);
 	usleep(100000);
 	tx_array[2] = 0;
 	tx_array[1] = 0;
 	tx_array[0] = 0;
 	val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
-	IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
+	IicWriteData(XIicDevFile, LMX_FUNCTION_ID, 3, tx_array);
 	usleep(100000);
 	for (Index = 0; Index < LMX2594_A_count; Index++) {
 		tx_array[2] = (unsigned char) (r[Index]) & (0xFF);
 		tx_array[1] = (unsigned char) (r[Index] >> 8) & (0xFF);
 		tx_array[0] = (unsigned char) (r[Index] >> 16) & (0xFF);
 		val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
-		IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
+		IicWriteData(XIicDevFile, LMX_FUNCTION_ID, 3, tx_array);
 		usleep(100000);
 	}
 	/* FCAL_EN = 1 */
@@ -540,7 +539,7 @@ void Lmx2594Updatei2c(int XIicDevFile,unsigned int  r[LMX2594_A_count])
 	tx_array[0] = (unsigned char) (r[112] >> 16) & (0xFF);
 	val = tx_array[0] | (tx_array[1] << 8) | (tx_array[2] << 16 ) ;
 	printf("LMX configured \n");
-	IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
+	IicWriteData(XIicDevFile, LMX_FUNCTION_ID, 3, tx_array);
 }
 static int Lmx2594UpdateFreq(int XIicDevFile,int  XFrequency)
 {
@@ -552,7 +551,7 @@ static int Lmx2594UpdateFreq(int XIicDevFile,int  XFrequency)
 		tx_array[1] = 0;
 		tx_array[0] = 0;
 
-		IicWriteData(XIicDevFile, FUNCTION_ID, 3, tx_array);
+		IicWriteData(XIicDevFile, LMX_FUNCTION_ID, 3, tx_array);
 		return 0;
 	}
 	for(XFreqIndex=0 ; XFreqIndex<20; XFreqIndex++) {
@@ -646,7 +645,7 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	 * Function Id.
 	 */
 	tx_array[0] = 0xF0;
-	tx_array[1] = FUNCTION_ID;
+	tx_array[1] = LMX_FUNCTION_ID;
 	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, I2C_SPI_ADDR);
 	while (XIicPs_BusIsBusy(&Iic))
 		;
@@ -793,42 +792,3 @@ void LMX2594ClockConfig(int XIicBus, int XFrequency)
 	Lmx2594UpdateFreq(XIicDevFile, XFrequency);
 #endif
 }
-#endif /* XPS_BOARD_ZCU111 || BOARD_XUPRFSOC */
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
