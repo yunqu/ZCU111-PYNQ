@@ -17,7 +17,8 @@ import os
 board = os.environ['BOARD']
 
 _ffi = cffi.FFI()
-_ffi.cdef("int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]);"
+_ffi.cdef("int clearInt(int IicNum);"
+          "int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]);"
           "int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]);"
           "int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]);")
 
@@ -38,7 +39,9 @@ def _safe_wrapper(name, *args, **kwargs):
         raise RuntimeError(f"Function {name} not in library")
     if getattr(_lib, name)(*args, **kwargs):
         raise RuntimeError(f"Function {name} call failed")
-
+        
+def _clear_int():
+    _safe_wrapper("clearInt", _iic_channel)
 
 def _write_lmk04208_regs(reg_vals):
     """Write values to the LMK04208 registers.

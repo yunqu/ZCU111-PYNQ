@@ -53,4 +53,25 @@ int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     // Requires patch to xrfdc_clk.c.
     return 0;
 }
+
+int clearInt(int IicNum){
+    int XIicDevFile;
+    char XIicDevFilename[20];
+
+    sprintf(XIicDevFilename, "/dev/i2c-%d", IicNum);
+    XIicDevFile = open(XIicDevFilename, O_RDWR);
+
+    if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, I2C_SPI_ADDR) < 0) {
+      printf("Error: Could not set address \n");
+      return 1;
+    }
+
+    SC18IS602ClearInt(XIicDevFile);
+
+    close(XIicDevFile);
+
+    // Should really get a return code from Lmx2594Updatei2c!
+    // Requires patch to xrfdc_clk.c.
+    return 0;
+}
 #endif /* BOARD_XUPRFSOC || BOARD_ZCU111 */
