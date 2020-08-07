@@ -70,7 +70,7 @@
 
 #define XIIC_BLOCK_MAX	16	/* Max data length */
 #define I2C_SMBUS_WRITE	0
-#define I2C_SMBUS_I2C_BLOCK  6
+#define I2C_SMBUS_I2C_BLOCK  5
 
 #else
 #include "xparameters.h"
