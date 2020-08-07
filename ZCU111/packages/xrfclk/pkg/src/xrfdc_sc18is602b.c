@@ -86,26 +86,15 @@ static inline void IicWriteData(int XIicDevFile, unsigned char command,
 }
 
 int SC18IS602ClearInt(int XIicDevFile)
-{
-//     int XIicDevFile;
-// 	char XIicDevFilename[20];
-
-// 	sprintf(XIicDevFilename, "/dev/i2c-%d", 8);
-// 	XIicDevFile = open(XIicDevFilename, O_RDWR);
-
-// 	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, I2C_SPI_ADDR) < 0) {
-// 		printf("Error: Could not set address \n");
-// 		return 1;
-// 	}    
-    
+{   
     struct i2c_smbus_ioctl_data args;
     union i2c_smbus_data data;
     data.block[0] = 0;
-	args.read_write = I2C_SMBUS_WRITE;
+    args.read_write = I2C_SMBUS_WRITE;
     args.command = 0xF1;
-	args.size = 2;
+    args.size = 2;
     args.data = &data;
-	ioctl(XIicDevFile,I2C_SMBUS,&args);
+    ioctl(XIicDevFile,I2C_SMBUS,&args);
     return 0;
 }
 
