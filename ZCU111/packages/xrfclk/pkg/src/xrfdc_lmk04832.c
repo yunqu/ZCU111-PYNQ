@@ -97,8 +97,8 @@ union i2c_smbus_data {
 #ifndef __BAREMETAL__
 
 static inline void IicWriteData(int XIicDevFile, unsigned char command,
-                                                   unsigned char length,
-                                                   const unsigned char *values)
+		unsigned char length,
+		const unsigned char *values)
 {
 	struct i2c_smbus_ioctl_data args;
 	union i2c_smbus_data data;
@@ -114,8 +114,8 @@ static inline void IicWriteData(int XIicDevFile, unsigned char command,
 }
 
 static inline void IicReadData(int XIicDevFile, unsigned char command,
-                                                   unsigned char length,
-                                                   unsigned char *values)
+		unsigned char length,
+		unsigned char *values)
 {
 	struct i2c_smbus_ioctl_data args;
 	union i2c_smbus_data data;
@@ -131,7 +131,7 @@ static inline void IicReadData(int XIicDevFile, unsigned char command,
 }
 
 static int Lmk04832UpdateFreq(int XIicDevFile,
-								unsigned int LMK04832_CKin[1][125] )
+		unsigned int LMK04832_CKin[1][125] )
 {
 	int Index;
 	unsigned char tx_array[3];
@@ -146,7 +146,7 @@ static int Lmk04832UpdateFreq(int XIicDevFile,
 }
 
 static int Lmk04832GetFreq(int XIicDevFile, 
-							unsigned int LMK04832_CKin[1][125] )
+		unsigned int LMK04832_CKin[1][125] )
 {
 	int Index;
 	unsigned char tx_array[3];
