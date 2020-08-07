@@ -121,7 +121,7 @@ static int Lmk04832UpdateFreq(int XIicDevFile, unsigned int LMK04832_CKin[1][125
 		tx_array[1] = (unsigned char) (LMK04832_CKin[0][Index] >> 8) & (0xFF);
 		tx_array[0] = (unsigned char) (LMK04832_CKin[0][Index] >> 16) & (0xFF);
 		IicWriteData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array);
-		usleep(1000);
+		usleep(5000);
 	}
 	return 0;
 }

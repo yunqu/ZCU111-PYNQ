@@ -35,7 +35,7 @@ void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125]);
 int SC18IS602ClearInt(int XIicDevFile);
 
 #define LMX_FUNCTION_ID 	0x3
-#define LMK_FUNCTION_ID 	0x8
+#define LMK_FUNCTION_ID 	0x1
 #define I2C_SPI_ADDR 	    0x2A
 #define I2C_MUX_ADDR	    0x71
 

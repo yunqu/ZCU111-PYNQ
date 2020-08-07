@@ -112,15 +112,16 @@ static inline void IicWriteData(int XIicDevFile, unsigned char command,
 	ioctl(XIicDevFile,I2C_SMBUS,&args);
 }
 
-static int Lmk04208UpdateFreq(int XIicDevFile, unsigned int LMK04208_CKin[1][125] )
+static int Lmk04208UpdateFreq(int XIicDevFile, unsigned int LMK04208_CKin[1][26] )
 {
 	int Index;
-	unsigned char tx_array[3];
+	unsigned char tx_array[4];
 	for (Index = 0; Index < LMK04208_count; Index++) {
-		tx_array[2] = (unsigned char) (LMK04208_CKin[0][Index]) & (0xFF);
-		tx_array[1] = (unsigned char) (LMK04208_CKin[0][Index] >> 8) & (0xFF);
-		tx_array[0] = (unsigned char) (LMK04208_CKin[0][Index] >> 16) & (0xFF);
-		IicWriteData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array);
+		tx_array[3] = (unsigned char) (LMK04208_CKin[0][Index]) & (0xFF);
+		tx_array[2] = (unsigned char) (LMK04208_CKin[0][Index] >> 8) & (0xFF);
+		tx_array[1] = (unsigned char) (LMK04208_CKin[0][Index] >> 16) & (0xFF);
+		tx_array[0] = (unsigned char) (LMK04208_CKin[0][Index] >> 24) & (0xFF);
+		IicWriteData(XIicDevFile, LMK_FUNCTION_ID, 4, tx_array);
 		usleep(1000);
 	}
 	return 0;
@@ -144,7 +145,7 @@ static int Lmk04208UpdateFreq(int XIicDevFile, unsigned int LMK04208_CKin[1][125
 * @note   	None
 *
 ****************************************************************************/
-void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][125])
+void LMK04208ClockConfig(int XIicBus, unsigned int LMK04208_CKin[1][26])
 {
 #ifdef __BAREMETAL__
 	XIicPs_Config *Config_iic;
