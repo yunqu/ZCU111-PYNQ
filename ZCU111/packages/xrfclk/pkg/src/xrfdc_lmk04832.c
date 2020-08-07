@@ -89,7 +89,7 @@
 XIicPs Iic; /* Instance of the IIC Device */
 
 #endif
-#include "xrfdc_clk.h"
+#include "xrfdc_lmk04832.h"
 
 #define LMK04832_count 125
 
@@ -252,7 +252,7 @@ void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 		return ;
 	}
 
-	LMK04832UpdateFreq( XIicDevFile, LMK04832_CKin);
+	Lmk04832UpdateFreq( XIicDevFile, LMK04832_CKin);
 	close(XIicDevFile);
 #endif
 }
