@@ -122,7 +122,7 @@ static inline void IicReadData(int XIicDevFile, unsigned char command,
 	int Index;
 	data.block[0] = length;
 	args.read_write = I2C_SMBUS_READ;
-	args.command = command;
+	args.command = 0xF;
 	args.size = I2C_SMBUS_I2C_BLOCK;
 	args.data = &data;
 	ioctl(XIicDevFile,I2C_SMBUS,&args);
@@ -302,7 +302,7 @@ void LMK04832DebugConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 
 	Lmk04832GetFreq( XIicDevFile, LMK04832_CKin);
 	for (Index = 0; Index < LMK04832_count; Index++)
-		printf("%x ", LMK04832_CKin[0][Index]);
+		printf("%d: %x\n", Index, LMK04832_CKin[0][Index]);
 	close(XIicDevFile);
 #endif
 }
