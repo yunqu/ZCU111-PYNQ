@@ -71,7 +71,8 @@
 #define XIIC_BLOCK_MAX	16	/* Max data length */
 #define I2C_SMBUS_WRITE	0
 #define I2C_SMBUS_READ	1
-#define I2C_SMBUS_I2C_BLOCK  5
+#define I2C_SMBUS_I2C_BYTE   1
+#define I2C_SMBUS_I2C_BLOCK  6
 
 #else
 #include "xparameters.h"
@@ -94,9 +95,7 @@ union i2c_smbus_data {
 	unsigned char block[XIIC_BLOCK_MAX+1];
 };
 
-#ifndef __BAREMETAL__
-
-static inline void IicWriteData(int XIicDevFile, unsigned char command,
+static inline int IicWriteData(int XIicDevFile, unsigned char command,
 		unsigned char length,
 		const unsigned char *values)
 {
@@ -110,24 +109,25 @@ static inline void IicWriteData(int XIicDevFile, unsigned char command,
 	args.command = command;
 	args.size = I2C_SMBUS_I2C_BLOCK;
 	args.data = &data;
-	ioctl(XIicDevFile,I2C_SMBUS,&args);
+	return ioctl(XIicDevFile,I2C_SMBUS,&args);
 }
 
-static inline void IicReadData(int XIicDevFile, unsigned char command,
-		unsigned char length,
-		unsigned char *values)
+static inline int IicReadData(int XIicDevFile, unsigned char *value)
 {
 	struct i2c_smbus_ioctl_data args;
 	union i2c_smbus_data data;
-	int Index;
-	data.block[0] = length;
+	int i, err;
 	args.read_write = I2C_SMBUS_READ;
-	args.command = 0xF;
-	args.size = I2C_SMBUS_I2C_BLOCK;
+	args.command = 0;
+	args.size = I2C_SMBUS_I2C_BYTE;
 	args.data = &data;
-	ioctl(XIicDevFile,I2C_SMBUS,&args);
-	for (Index = 1; Index <= length; Index++)
-		values[Index-1] = data.block[Index];
+	if (ioctl(XIicDevFile,I2C_SMBUS,&args)) {
+		return -1;
+	}
+	else {
+		value[0] = 0xff & data.byte;
+		return 0;
+	}
 }
 
 static int Lmk04832UpdateFreq(int XIicDevFile,
@@ -139,27 +139,23 @@ static int Lmk04832UpdateFreq(int XIicDevFile,
 		tx_array[2] = (unsigned char) (LMK04832_CKin[0][Index]) & (0xFF);
 		tx_array[1] = (unsigned char) (LMK04832_CKin[0][Index] >> 8) & (0xFF);
 		tx_array[0] = (unsigned char) (LMK04832_CKin[0][Index] >> 16) & (0xFF);
-		IicWriteData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array);
-		usleep(5000);
+		if (IicWriteData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array)){
+			printf("Error: IicWriteData failed. \n");
+			return -1;
+		}
+		usleep(1000);
+		if (IicWriteData(XIicDevFile, NC_FUNCTION_ID, 3, tx_array)){
+			printf("Error: IicWriteData failed. \n");
+			return -1;
+		}
+		usleep(1000);
+		if (IicReadData(XIicDevFile, tx_array)){
+			printf("Error: IicReadData failed. \n");
+			return -1;
+		}
 	}
 	return 0;
 }
-
-static int Lmk04832GetFreq(int XIicDevFile, 
-		unsigned int LMK04832_CKin[1][125] )
-{
-	int Index;
-	unsigned char tx_array[3];
-	for (Index = 0; Index < LMK04832_count; Index++) {
-		IicReadData(XIicDevFile, LMK_FUNCTION_ID, 3, tx_array);
-		LMK04832_CKin[0][Index] = \
-			(tx_array[0]<<16) | (tx_array[1]<<8) | (tx_array[2]);
-		usleep(5000);
-	}
-	return Index;
-}
-
-#endif
 
 /****************************************************************************/
 /**
@@ -180,95 +176,6 @@ static int Lmk04832GetFreq(int XIicDevFile,
 ****************************************************************************/
 void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 {
-#ifdef __BAREMETAL__
-	XIicPs_Config *Config_iic;
-	int Status;
-	u8 tx_array[10];
-	u8 rx_array[10];
-	u32 ClkRate = 100000;
-	int Index;
-
-	Config_iic = XIicPs_LookupConfig(XIicBus);
-	if (NULL == Config_iic) {
-		return;
-	}
-
-	Status = XIicPs_CfgInitialize(&Iic, Config_iic, Config_iic->BaseAddress);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	Status = XIicPs_SetSClk(&Iic, ClkRate);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * 0x02-enable Super clock module 0x20- analog I2C power module slaves
-	 */
-	tx_array[0] = 0x20;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x01, I2C_MUX_ADDR);
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-	usleep(25000);
-
-	/*
-	 * Receive the Data.
-	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array, 1, I2C_MUX_ADDR);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * Wait until bus is idle to start another transfer.
-	 */
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-
-
-	/*
-	 * Function Id.
-	 */
-	tx_array[0] = 0xF0;
-	tx_array[1] = LMK_FUNCTION_ID;
-	XIicPs_MasterSendPolled(&Iic, tx_array, 0x02, I2C_SPI_ADDR);
-	while (XIicPs_BusIsBusy(&Iic))
-		;
-	usleep(25000);
-
-	/*
-	 * Receive the Data.
-	 */
-	Status = XIicPs_MasterRecvPolled(&Iic, rx_array,
-			2, I2C_SPI_ADDR);
-	if (Status != XST_SUCCESS) {
-		return;
-	}
-
-	/*
-	 * Wait until bus is idle to start another transfer.
-	 */
-	while (XIicPs_BusIsBusy(&Iic));
-
-
-	for (Index = 0; Index < LMK04832_count; Index++) {
-		tx_array[0] = 0x02;
-		tx_array[4] = (u8) (LMK04832_CKin[0][Index]) & (0xFF);
-		tx_array[3] = (u8) (LMK04832_CKin[0][Index] >> 8) & (0xFF);
-		tx_array[2] = (u8) (LMK04832_CKin[0][Index] >> 16) & (0xFF);
-		tx_array[1] = (u8) (LMK04832_CKin[0][Index] >> 24) & (0xFF);
-		Status = XIicPs_MasterSendPolled(&Iic, tx_array, 0x05, I2C_SPI_ADDR);
-		usleep(25000);
-		while (XIicPs_BusIsBusy(&Iic))
-			;
-	}
-
-	sleep(2);
-
-	xil_printf("LMK04832 configuration write done\r\n");
-
-#else
 	int XIicDevFile;
 	char XIicDevFilename[20];
 
@@ -282,27 +189,5 @@ void LMK04832ClockConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
 
 	Lmk04832UpdateFreq( XIicDevFile, LMK04832_CKin);
 	close(XIicDevFile);
-#endif
 }
 
-void LMK04832DebugConfig(int XIicBus, unsigned int LMK04832_CKin[1][125])
-{
-#ifndef __BAREMETAL__
-	int XIicDevFile;
-	int Index;
-	char XIicDevFilename[20];
-
-	sprintf(XIicDevFilename, "/dev/i2c-%d", XIicBus);
-	XIicDevFile = open(XIicDevFilename, O_RDWR);
-
-	if (ioctl(XIicDevFile, I2C_SLAVE_FORCE, I2C_SPI_ADDR) < 0) {
-		printf("Error: Could not set address \n");
-		return ;
-	}
-
-	Lmk04832GetFreq( XIicDevFile, LMK04832_CKin);
-	for (Index = 0; Index < LMK04832_count; Index++)
-		printf("%d: %x\n", Index, LMK04832_CKin[0][Index]);
-	close(XIicDevFile);
-#endif
-}

@@ -37,6 +37,7 @@ int SC18IS602ClearInt(int XIicDevFile);
 
 #define LMX_FUNCTION_ID 	0x3
 #define LMK_FUNCTION_ID 	0x8
+#define NC_FUNCTION_ID		0x4
 #define I2C_SPI_ADDR 	    0x2A
 #define I2C_MUX_ADDR	    0x71
 

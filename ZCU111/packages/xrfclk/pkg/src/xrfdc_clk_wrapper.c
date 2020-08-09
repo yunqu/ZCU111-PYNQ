@@ -12,10 +12,7 @@ int writeLmk04208Regs(int IicNum, unsigned int RegVals[26]) {
     for(int i=0;i<26;i++)
 	    LMK04208_CKin[0][i] = RegVals[i];
     LMK04208ClockConfig(IicNum, LMK04208_CKin);
-
-     // We really should be returning exit status here!
-     // Need to patch xrfdc_clk.c file to return status.
-     return 0;
+    return 0;
  }
 #endif /* BOARD_ZCU111 */
  
@@ -25,10 +22,7 @@ int writeLmk04832Regs(int IicNum, unsigned int RegVals[125]) {
     for(int i=0;i<125;i++)
 	    LMK04832_CKin[0][i] = RegVals[i];
     LMK04832ClockConfig(IicNum, LMK04832_CKin);
-
-     // We really should be returning exit status here!
-     // Need to patch xrfdc_clk.c file to return status.
-     return 0;
+    return 0;
 }
 #endif /* BOARD_XUPRFSOC */
 
@@ -46,11 +40,7 @@ int writeLmx2594Regs(int IicNum, unsigned int RegVals[113]) {
     }
 
     Lmx2594Updatei2c(XIicDevFile, RegVals);
-
     close(XIicDevFile);
-
-    // Should really get a return code from Lmx2594Updatei2c!
-    // Requires patch to xrfdc_clk.c.
     return 0;
 }
 
@@ -67,11 +57,8 @@ int clearInt(int IicNum){
     }
 
     SC18IS602ClearInt(XIicDevFile);
-
     close(XIicDevFile);
-
-    // Should really get a return code from Lmx2594Updatei2c!
-    // Requires patch to xrfdc_clk.c.
     return 0;
 }
 #endif /* BOARD_XUPRFSOC || BOARD_ZCU111 */
+
